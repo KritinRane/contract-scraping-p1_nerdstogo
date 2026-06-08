@@ -211,11 +211,11 @@ def main():
     if new_hits:
         save_to_csv(new_hits)
 
-send_email(
+    send_email(
         new_hits=new_hits,
-        to_email="Kritin.Rane@nerdstogo.com",
-        from_email="kritinrane5@gmail.com",
-        app_password="qclojsvhbfeqbukd"
+        to_email=os.environ.get("to_email"),
+        from_email=os.environ.get("from_email"),
+        app_password=os.environ.get("app_password")
     )
 
 
