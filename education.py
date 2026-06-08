@@ -6,16 +6,48 @@ from email.mime.text import MIMEText
 import json
 import os
 import re
+import csv
 
-# Sources confirmed to work with static scraping.
-# BidNet and county sites use JavaScript rendering and cannot be scraped
-# with requests -- those require manual checking or a paid API.
 SOURCES = [
+    # Co-op purchasing
     {
         "name": "ESCNJ Bidding Opportunities",
         "url": "https://www.escnj.us/co-op-pricing/vendor-section/bidding-opportunity-documents",
         "escnj": True
     },
+    # Mercer County school districts
+    {
+        "name": "Princeton Public Schools",
+        "url": "https://www.princetonk12.org/resources-and-notices/rfps-bids-and-quotes",
+        "escnj": False
+    },
+    {
+        "name": "East Windsor Regional SD",
+        "url": "https://www.ewrsd.org/domain/29",
+        "escnj": False
+    },
+    {
+        "name": "Hopewell Valley Regional SD",
+        "url": "https://www.hvrsd.org/domain/54",
+        "escnj": False
+    },
+    {
+        "name": "Lawrence Township Schools",
+        "url": "https://www.ltps.org/departments/business-office",
+        "escnj": False
+    },
+    # Mercer County municipalities
+    {
+        "name": "Princeton NJ Borough Bids",
+        "url": "https://www.princetonnj.gov/Bids.aspx",
+        "escnj": False
+    },
+    {
+        "name": "Lawrence Township NJ Bids",
+        "url": "https://www.lawrencetwp.com/CurrentBidsRFPs",
+        "escnj": False
+    },
+    # Middlesex County school districts
     {
         "name": "Monroe Township Schools",
         "url": "https://www.monroe.k12.nj.us/our-district/business-office/overview",
@@ -27,18 +59,13 @@ SOURCES = [
         "escnj": False
     },
     {
-        "name": "Cranbury School District",
-        "url": "https://www.cranburyschool.org/business-office",
+        "name": "Piscataway Township Schools",
+        "url": "https://www.piscatawayschools.org/79055_3",
         "escnj": False
     },
     {
-        "name": "Hopewell Valley Regional SD",
-        "url": "https://www.hvrsd.org/domain/54",
-        "escnj": False
-    },
-    {
-        "name": "Lawrence Township Schools",
-        "url": "https://www.ltps.org/domain/51",
+        "name": "Edison Township Schools",
+        "url": "https://www.edison.k12.nj.us/departments/business_office",
         "escnj": False
     },
 ]
@@ -57,6 +84,8 @@ HEADERS = {
     "Accept-Language": "en-US,en;q=0.5",
 }
 
+CSV_FILE = "/Users/kritinrane/Documents/governmentscraper-nerdstogo/leads.csv"
+
 def is_it_related(text):
     return any(kw in text.lower() for kw in IT_KEYWORDS)
 
@@ -70,8 +99,6 @@ def scrape_source(source):
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
-        # ESCNJ: only grab <a> tags with current year and IT keywords
-        # to avoid navigation menus and archived bids
         if source["escnj"]:
             for tag in soup.find_all("a"):
                 text = tag.get_text(strip=True)
@@ -115,6 +142,21 @@ def load_seen():
 def save_seen(seen):
     with open("seen_bids.json", "w") as f:
         json.dump(list(seen), f)
+
+def save_to_csv(hits):
+    file_exists = os.path.exists(CSV_FILE)
+    with open(CSV_FILE, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["date", "source", "text", "link"])
+        if not file_exists:
+            writer.writeheader()
+        for hit in hits:
+            writer.writerow({
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "source": hit["source"],
+                "text": hit["text"],
+                "link": hit["link"]
+            })
+    print(f"Saved {len(hits)} new hits to leads.csv")
 
 def send_email(new_hits, to_email, from_email, app_password):
     if not new_hits:
@@ -166,13 +208,16 @@ def main():
             print(f"  -> {hit['link']}")
         print()
 
-    # To enable email alerts, fill in your details and uncomment:
-    # send_email(
-    #     new_hits=new_hits,
-    #     to_email="you@example.com",
-    #     from_email="yourbot@gmail.com",
-    #     app_password="your_gmail_app_password"
-    # )
+    if new_hits:
+        save_to_csv(new_hits)
+
+send_email(
+        new_hits=new_hits,
+        to_email="Kritin.Rane@nerdstogo.com",
+        from_email="kritinrane5@gmail.com",
+        app_password="qclojsvhbfeqbukd"
+    )
+
 
 if __name__ == "__main__":
     main()
