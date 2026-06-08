@@ -1,6 +1,6 @@
 # 🖥️ NerdsToGo Princeton — Government IT Bid Scraper
 
-An automated lead generation pipeline that scrapes NJ school districts, municipalities, and co-op purchasing programs for IT-related contract opportunities. Built for **NerdsToGo Princeton** (Plainsboro, NJ) to surface actionable government IT bids daily by intern: Kritin Rane. 
+An automated lead generation pipeline that scrapes NJ school districts, municipalities, and co-op purchasing programs for IT-related contract opportunities. Built for **NerdsToGo Princeton** to surface actionable government IT bids daily by intern: Kritin Rane. 
 
 ---
 
